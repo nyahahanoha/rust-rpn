@@ -1,7 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct RPN {
+pub struct Rpn {
     stack: Vec<f32>,
     operator: Operation,
 }
@@ -14,23 +14,22 @@ enum Operation {
     DIV,
     NONE,
 }
-
-pub fn new(v: Vec<f32>) -> RPN {
-    RPN {
+pub fn new(v: Vec<f32>) -> Rpn {
+    Rpn {
         stack: v,
         operator: Operation::NONE,
     }
 }
 
-impl RPN {
-    fn pop(&mut self) -> Result<f32, String> {
+impl Rpn {
+    pub fn pop(&mut self) -> Result<f32, String> {
         match self.stack.pop() {
             Some(n) => Ok(n),
             None => Err("There is no value in stack".to_string()),
         }
     }
 
-    fn push(&mut self, n: f32) {
+    pub fn push(&mut self, n: f32) {
         self.stack.push(n);
     }
 
@@ -38,7 +37,7 @@ impl RPN {
         self.operator = Operation::NONE;
     }
 
-    fn set_operator(&mut self, o: char) {
+    pub fn set_operator(&mut self, o: char) {
         if self.is_none_operator() {
             if o == '+' {
                 self.operator = Operation::ADD;
@@ -68,7 +67,7 @@ impl RPN {
         self.stack.len()
     }
 
-    fn execute<'a>(&mut self) -> Result<f32, String> {
+    pub fn execute<'a>(&mut self) -> Result<f32, String> {
         if self.is_none_operator() {
             panic!("Not set operator");
         } else if self.len() < 2 {
@@ -85,6 +84,12 @@ impl RPN {
         } else if self.operator == Operation::MUL {
             ans = b * a;
         } else if self.operator == Operation::DIV {
+            if a == 0.0 {
+                self.push(b);
+                self.push(a);
+                self.delete_operator();
+                return Err("Cannot be divided by zero".to_string());
+            }
             ans = b / a;
         } else {
             panic!("Dont'know this operator");
@@ -95,7 +100,7 @@ impl RPN {
     }
 }
 
-impl Display for RPN {
+impl Display for Rpn {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{:?}", self.stack)
     }
@@ -109,18 +114,18 @@ mod tests {
     fn test_init() {
         assert_eq!(
             new(vec![1.0, 3.0, 5.0]),
-            RPN {
+            Rpn {
                 stack: vec![1.0, 3.0, 5.0],
                 operator: Operation::NONE,
             }
         );
     }
     #[fixture]
-    pub fn fixture() -> RPN {
+    pub fn fixture() -> Rpn {
         new(vec![1.0, 3.0, 5.0])
     }
     #[rstest]
-    fn test_pop(fixture: RPN) {
+    fn test_pop(fixture: Rpn) {
         let mut a = fixture.clone();
         assert_eq!(a.pop(), Ok(5.0));
         assert_eq!(a.pop(), Ok(3.0));
@@ -128,7 +133,7 @@ mod tests {
         assert_eq!(a.pop(), Err("There is no value in stack".to_string()));
     }
     #[rstest]
-    fn test_push(fixture: RPN) {
+    fn test_push(fixture: Rpn) {
         let mut a = fixture.clone();
         a.push(2.0);
         assert_eq!(a.to_string(), "[1.0, 3.0, 5.0, 2.0]");
@@ -136,7 +141,7 @@ mod tests {
         assert_eq!(a.to_string(), "[1.0, 3.0, 5.0, 2.0, 4.0]");
     }
     #[rstest]
-    fn test_change_operator(fixture: RPN) {
+    fn test_change_operator(fixture: Rpn) {
         let mut a = fixture.clone();
         assert_eq!(a.is_none_operator(), true);
         a.set_operator('+');
@@ -154,7 +159,7 @@ mod tests {
         assert_eq!(a.operator, Operation::DIV);
     }
     #[rstest]
-    fn test_execute(fixture: RPN) {
+    fn test_execute(fixture: Rpn) {
         let mut a = fixture.clone();
         a.set_operator('+');
         assert_eq!(a.execute(), Ok(8.0));
@@ -174,10 +179,13 @@ mod tests {
         assert_eq!(a.to_string(), "[21.0]");
         a.set_operator('+');
         assert_eq!(a.execute(), Err("Stack is shortage".to_string()));
+        a.push(0.0);
+        a.set_operator('/');
+        assert_eq!(a.execute(), Err("Cannot be divided by zero".to_string()));
     }
     #[rstest]
     #[should_panic]
-    fn test_panic(fixture: RPN) {
+    fn test_panic(fixture: Rpn) {
         let mut a = fixture.clone();
         a.set_operator('&');
         a.set_operator('+');
