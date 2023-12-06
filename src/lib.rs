@@ -7,7 +7,7 @@ pub struct RPN {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Operation {
+enum Operation {
     ADD,
     SUB,
     MUL,
