@@ -1,18 +1,25 @@
 use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
-struct RPN {
+pub struct RPN {
     stack: Vec<f32>,
     operator: Operation,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum Operation {
+pub enum Operation {
     ADD,
     SUB,
     MUL,
     DIV,
     NONE,
+}
+
+pub fn new(v: Vec<f32>) -> RPN {
+    RPN {
+        stack: v,
+        operator: Operation::NONE,
+    }
 }
 
 impl RPN {
