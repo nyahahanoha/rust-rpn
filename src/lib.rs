@@ -90,32 +90,21 @@ impl Display for RPN {
 
 #[cfg(test)]
 mod tests {
-    use crate::Operation;
-    use crate::RPN;
+    use crate::*;
     use rstest::*;
-    #[fixture]
-    pub fn fixture() -> RPN {
-        RPN {
-            stack: vec![1.0, 3.0, 5.0],
-            operator: Operation::NONE,
-        }
-    }
     #[rstest]
-    fn test_init(fixture: RPN) {
+    fn test_init() {
         assert_eq!(
-            fixture,
+            new(vec![1.0, 3.0, 5.0]),
             RPN {
                 stack: vec![1.0, 3.0, 5.0],
                 operator: Operation::NONE,
             }
         );
-        assert_ne!(
-            fixture,
-            RPN {
-                stack: vec![3.0],
-                operator: Operation::ADD,
-            }
-        );
+    }
+    #[fixture]
+    pub fn fixture() -> RPN {
+        new(vec![1.0, 3.0, 5.0])
     }
     #[rstest]
     fn test_pop(fixture: RPN) {
